@@ -226,6 +226,30 @@ async function main() {
   });
   console.log("Created store settings");
 
+  // Create shipping rates
+  await db.shippingRate.createMany({
+    data: [
+      { name: "USPS Ground Advantage", carrier: "USPS", serviceName: "Ground Advantage", baseRate: 4.99, estimatedDays: "5-7 business days", zone: "domestic" },
+      { name: "USPS Priority Mail", carrier: "USPS", serviceName: "Priority Mail", baseRate: 8.99, estimatedDays: "2-3 business days", zone: "domestic" },
+      { name: "FedEx 2Day", carrier: "FedEx", serviceName: "2Day", baseRate: 14.99, estimatedDays: "2 business days", zone: "domestic" },
+      { name: "FedEx Overnight", carrier: "FedEx", serviceName: "Standard Overnight", baseRate: 24.99, estimatedDays: "1 business day", zone: "domestic" },
+    ],
+  });
+  console.log("Created shipping rates");
+
+  // Create default warehouse
+  await db.warehouse.create({
+    data: {
+      name: "US Main Warehouse",
+      address: "350 Fifth Avenue",
+      city: "New York",
+      state: "NY",
+      zipCode: "10118",
+      country: "US",
+    },
+  });
+  console.log("Created warehouse");
+
   console.log("\nSeed complete!");
   console.log("Admin login: admin@luxgemstech.com / admin123");
   console.log("Customer login: customer@test.com / customer123");

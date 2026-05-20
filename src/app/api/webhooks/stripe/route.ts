@@ -95,6 +95,8 @@ export async function POST(request: NextRequest) {
             currency,
             shippingInfo: JSON.stringify(shippingInfo),
             stripeSessionId: session.id,
+            shippingCarrier: metadata.shippingCarrier || null,
+            shippingService: metadata.shippingService || null,
             items: {
               create: orderItems,
             },

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ShoppingCart, Search, User, Menu, X, Globe } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "@/hooks/useTranslations";
+import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
 
 const currencies = [
@@ -18,10 +19,12 @@ export function Header() {
   const { t, lang } = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
+  const { cartCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currency, setCurrency] = useState("USD");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const otherLang = lang === "zh" ? "en" : "zh";
   const switchLangPath = pathname.replace(`/${lang}`, `/${otherLang}`);
@@ -34,10 +37,32 @@ export function Header() {
     { href: "/blog", label: t("nav.blog") },
   ];
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Focus input when search opens
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  const navigateToSearch = () => {
     if (searchQuery.trim()) {
-      router.push(`/${lang}/products?search=${encodeURIComponent(searchQuery)}`);
+      router.push(`/${lang}/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigateToSearch();
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      navigateToSearch();
+    }
+    if (e.key === "Escape") {
       setSearchOpen(false);
       setSearchQuery("");
     }
@@ -82,26 +107,40 @@ export function Header() {
           {/* Right actions */}
           <div className="flex items-center gap-3">
             {/* Search */}
-            {searchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t("nav.search")}
-                  className="w-48 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9a96e]"
-                  autoFocus
-                  onBlur={() => !searchQuery && setSearchOpen(false)}
-                />
-              </form>
-            ) : (
+            <div className="flex items-center">
+              {/* Search input with width transition */}
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder={t("nav.search")}
+                className={cn(
+                  "rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9a96e] transition-all duration-300 ease-in-out",
+                  searchOpen
+                    ? "w-48 opacity-100 ml-0"
+                    : "w-0 opacity-0 px-0 border-0 ml-0 overflow-hidden"
+                )}
+                onBlur={() => {
+                  if (!searchQuery) {
+                    setSearchOpen(false);
+                  }
+                }}
+              />
               <button
-                onClick={() => setSearchOpen(true)}
-                className="p-2 text-gray-500 hover:text-[#c9a96e] transition-colors"
+                onClick={() => {
+                  setSearchOpen(!searchOpen);
+                  if (searchOpen && searchQuery) {
+                    setSearchQuery("");
+                  }
+                }}
+                className="p-2 text-gray-500 hover:text-[#c9a96e] transition-colors shrink-0"
+                aria-label={searchOpen ? "Close search" : "Open search"}
               >
                 <Search className="h-5 w-5" />
               </button>
-            )}
+            </div>
 
             {/* Currency selector */}
             <select
@@ -139,9 +178,11 @@ export function Header() {
               className="relative p-2 text-gray-500 hover:text-[#c9a96e] transition-colors"
             >
               <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#c9a96e] text-[10px] font-bold text-white">
-                0
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#c9a96e] text-[10px] font-bold text-white animate-scale-in">
+                  {cartCount}
+                </span>
+              )}
             </Link>
 
             {/* Mobile menu button */}

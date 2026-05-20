@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 
 export default async function BlogArticlePage({
   params,
@@ -35,13 +36,14 @@ export default async function BlogArticlePage({
 
   return (
     <article className="max-w-3xl mx-auto px-4 py-12">
-      {/* Back link */}
-      <Link
-        href="/blog"
-        className="inline-flex items-center gap-1 text-sm text-[#c9a96e] hover:underline mb-8"
-      >
-        &larr; Back to Blog
-      </Link>
+      {/* Breadcrumb */}
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Blog", href: "/blog" },
+          { label: article.title },
+        ]}
+      />
 
       {/* Cover Image */}
       {article.coverImage && (

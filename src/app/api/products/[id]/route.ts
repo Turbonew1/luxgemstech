@@ -31,6 +31,9 @@ export async function PUT(
   if (body.images !== undefined) {
     data.images = JSON.stringify(body.images);
   }
+  if (body.videoUrl !== undefined) {
+    data.videoUrl = body.videoUrl || null;
+  }
 
   const product = await db.product.update({ where: { id }, data });
   return NextResponse.json(product);

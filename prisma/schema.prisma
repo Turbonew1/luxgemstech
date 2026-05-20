@@ -37,6 +37,7 @@ model Product {
   stock        Int         @default(0)
   sku          String      @unique
   images       String
+  videoUrl     String?
   categoryId   String
   category     Category    @relation(fields: [categoryId], references: [id])
   featured     Boolean     @default(false)
@@ -62,6 +63,9 @@ model Order {
   currency        String
   shippingInfo    String
   stripeSessionId String?
+  shippingCarrier String?
+  shippingService String?
+  trackingNumber  String?
   createdAt       DateTime    @default(now())
 }
 
@@ -106,4 +110,29 @@ model StoreSettings {
   primaryColor String   @default("#1a1a2e")
   currencies   String   @default("[\"USD\",\"EUR\",\"CNY\",\"JPY\"]")
   shippingZones String?
+}
+
+model ShippingRate {
+  id            String   @id @default(cuid())
+  name          String
+  carrier       String
+  serviceName   String?
+  baseRate      Float
+  perPoundRate  Float    @default(0)
+  zone          String?
+  isActive      Boolean  @default(true)
+  estimatedDays String?
+  minWeight     Float    @default(0)
+  maxWeight     Float?
+}
+
+model Warehouse {
+  id       String  @id @default(cuid())
+  name     String
+  address  String
+  city     String
+  state    String
+  zipCode  String
+  country  String  @default("US")
+  isActive Boolean @default(true)
 }

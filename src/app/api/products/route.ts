@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
       stock: body.stock || 0,
       sku: body.sku,
       images: JSON.stringify(body.images || []),
+      videoUrl: body.videoUrl || null,
       categoryId: body.categoryId,
       featured: body.featured || false,
       published: body.published || false,

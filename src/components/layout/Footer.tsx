@@ -1,10 +1,45 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "@/hooks/useTranslations";
+import toast from "react-hot-toast";
 
 export function Footer() {
   const { t, lang } = useTranslations();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email.trim()) {
+      toast.error("Please enter your email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success(data.message || "Subscribed successfully!");
+        setEmail("");
+      } else {
+        toast.error(data.error || "Something went wrong. Please try again.");
+      }
+    } catch {
+      toast.error("Network error. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <footer className="bg-[#1a1a2e] text-white">
@@ -66,18 +101,21 @@ export function Footer() {
             </p>
             <form
               className="flex gap-2"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleNewsletterSubmit}
             >
               <input
                 type="email"
                 placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="flex-1 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#c9a96e]"
               />
               <button
                 type="submit"
-                className="rounded-lg bg-[#c9a96e] px-4 py-2 text-sm font-medium text-white hover:bg-[#b8934e] transition-colors"
+                disabled={loading}
+                className="rounded-lg bg-[#c9a96e] px-4 py-2 text-sm font-medium text-white hover:bg-[#b8934e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Subscribe
+                {loading ? "..." : "Subscribe"}
               </button>
             </form>
           </div>

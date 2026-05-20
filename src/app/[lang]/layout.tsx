@@ -1,5 +1,6 @@
 import { AuthProvider } from "@/components/layout/AuthProvider";
 import { CartProvider } from "@/hooks/useCart";
+import { WishlistProvider } from "@/hooks/useWishlist";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
@@ -11,9 +12,11 @@ export default function LocaleLayout({
   return (
     <AuthProvider>
       <CartProvider>
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <WishlistProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   );

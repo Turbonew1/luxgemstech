@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { items, shippingInfo, currency = "USD", userId } = body;
+    const { items, shippingInfo, currency = "USD", userId, shippingRate } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -58,13 +58,15 @@ export async function POST(request: NextRequest) {
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "paypal", "alipay", "wechat_pay", "affirm", "klarna", "link"],
       mode: "payment",
       line_items: lineItems,
       metadata: {
         userId: userId || "guest",
         shippingInfo: JSON.stringify(shippingInfo || {}),
         currency,
+        shippingCarrier: shippingRate?.carrier || "",
+        shippingService: shippingRate?.serviceName || "",
         items: JSON.stringify(items.map((i: { productId: string; quantity: number }) => ({
           productId: i.productId,
           quantity: i.quantity || 1,

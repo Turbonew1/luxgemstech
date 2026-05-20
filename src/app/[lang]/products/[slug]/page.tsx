@@ -2,8 +2,11 @@ import { db } from "@/lib/db";
 import { formatPrice, cn } from "@/lib/utils";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
+import { ReviewForm } from "@/components/product/ReviewForm";
+import { WishlistButton } from "@/components/product/WishlistButton";
+import { ProductGrid } from "@/components/product/ProductGrid";
 import { Badge } from "@/components/ui/Badge";
-import Link from "next/link";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -50,6 +53,18 @@ export default async function ProductDetailPage({
     notFound();
   }
 
+  // Fetch related products (same category, excluding current product)
+  const relatedProducts = await db.product.findMany({
+    where: {
+      categoryId: product.categoryId,
+      id: { not: product.id },
+      published: true,
+    },
+    include: { category: true },
+    take: 4,
+    orderBy: { createdAt: "desc" },
+  });
+
   const images: string[] = JSON.parse(product.images || "[]");
   const specs: Record<string, string> | null = product.specs
     ? JSON.parse(product.specs)
@@ -68,36 +83,21 @@ export default async function ProductDetailPage({
     Record<string, string>
   >;
 
+  const breadcrumbItems = [
+    { label: t.nav.home || "Home", href: `/${lang}` },
+    { label: t.nav.shop || "Shop", href: `/${lang}/products` },
+    {
+      label: product.category.name,
+      href: `/${lang}/products?category=${product.category.slug}`,
+    },
+    { label: product.title },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
-        <nav className="mb-8 flex items-center gap-2 text-sm text-gray-500">
-          <Link
-            href={`/${lang}`}
-            className="hover:text-[#c9a96e] transition-colors"
-          >
-            {t.nav.home || "Home"}
-          </Link>
-          <span>/</span>
-          <Link
-            href={`/${lang}/products`}
-            className="hover:text-[#c9a96e] transition-colors"
-          >
-            {t.nav.shop || "Shop"}
-          </Link>
-          <span>/</span>
-          <Link
-            href={`/${lang}/products?category=${product.category.slug}`}
-            className="hover:text-[#c9a96e] transition-colors"
-          >
-            {product.category.name}
-          </Link>
-          <span>/</span>
-          <span className="text-[#1a1a2e] truncate max-w-[200px]">
-            {product.title}
-          </span>
-        </nav>
+        <Breadcrumb items={breadcrumbItems} />
 
         <div className="grid gap-12 lg:grid-cols-2">
           {/* Product Gallery */}
@@ -199,8 +199,8 @@ export default async function ProductDetailPage({
                 )}
               </div>
 
-              {/* Add to cart */}
-              <div className="mt-8">
+              {/* Add to cart + Wishlist */}
+              <div className="mt-8 flex flex-col gap-3">
                 <AddToCartButton
                   product={{
                     id: product.id,
@@ -212,6 +212,12 @@ export default async function ProductDetailPage({
                     stock: product.stock,
                   }}
                   disabled={!inStock}
+                />
+                <WishlistButton
+                  productId={product.id}
+                  productTitle={product.title}
+                  variant="button"
+                  size="md"
                 />
               </div>
             </div>
@@ -276,6 +282,9 @@ export default async function ProductDetailPage({
                   No reviews yet. Be the first to review this product.
                 </p>
               )}
+
+              {/* Review Form */}
+              <ReviewForm productId={product.id} />
             </div>
           </div>
 
@@ -305,6 +314,16 @@ export default async function ProductDetailPage({
             )}
           </div>
         </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold text-[#1a1a2e] mb-8">
+              You May Also Like
+            </h2>
+            <ProductGrid products={relatedProducts} />
+          </div>
+        )}
       </div>
     </div>
   );
