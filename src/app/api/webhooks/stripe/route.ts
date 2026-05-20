@@ -47,21 +47,24 @@ export async function POST(request: NextRequest) {
         const userId = metadata.userId || "guest";
 
         // Get shipping from Stripe
-        if (session.shipping_details) {
-          shippingInfo.name = session.shipping_details.name;
-          if (session.shipping_details.address) {
-            const addr = session.shipping_details.address;
-            shippingInfo.address = addr.line1;
-            shippingInfo.city = addr.city;
-            shippingInfo.state = addr.state;
-            shippingInfo.zip = addr.postal_code;
-            shippingInfo.country = addr.country;
+        const rawSession = session as unknown as Record<string, unknown>;
+        const stripeShipping = rawSession.shipping as Record<string, unknown> | null;
+        if (stripeShipping) {
+          shippingInfo.name = stripeShipping.name || shippingInfo.name;
+          const addr = stripeShipping.address as Record<string, unknown> | undefined;
+          if (addr) {
+            shippingInfo.address = addr.line1 || shippingInfo.address;
+            shippingInfo.city = addr.city || shippingInfo.city;
+            shippingInfo.state = addr.state || shippingInfo.state;
+            shippingInfo.zip = addr.postal_code || shippingInfo.zip;
+            shippingInfo.country = addr.country || shippingInfo.country;
           }
         }
 
-        if (session.customer_details) {
-          shippingInfo.email = shippingInfo.email || session.customer_details.email;
-          shippingInfo.phone = shippingInfo.phone || session.customer_details.phone;
+        const customerDetails = rawSession.customer_details as Record<string, unknown> | null;
+        if (customerDetails) {
+          shippingInfo.email = shippingInfo.email || customerDetails.email;
+          shippingInfo.phone = shippingInfo.phone || customerDetails.phone;
         }
 
         // Calculate total

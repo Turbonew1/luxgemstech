@@ -1,9 +1,9 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { ProductFilters } from "@/components/product/ProductFilters";
-import { Pagination } from "@/components/ui/Pagination";
 import { ProductPagination } from "./ProductPagination";
-import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -34,14 +34,14 @@ export default async function ProductsPage({
   const sort = sp.sort || "newest";
   const page = Math.max(1, parseInt(sp.page || "1", 10));
 
-  const where: Record<string, unknown> = {
+  const where: Prisma.ProductWhereInput = {
     published: true,
   };
 
   if (search) {
     where.OR = [
-      { title: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
+      { title: { contains: search } },
+      { description: { contains: search } },
     ];
   }
 
@@ -64,14 +64,14 @@ export default async function ProductsPage({
 
   const [products, totalCount, categories] = await Promise.all([
     db.product.findMany({
-      where: where as Parameters<typeof db.product.findMany>[0],
+      where,
       orderBy,
       include: { category: true },
       skip: (page - 1) * PRODUCTS_PER_PAGE,
       take: PRODUCTS_PER_PAGE,
     }),
     db.product.count({
-      where: where as Parameters<typeof db.product.count>[0],
+      where,
     }),
     db.category.findMany({
       select: { id: true, name: true, slug: true },
