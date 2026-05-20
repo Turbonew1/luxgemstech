@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String
+  role      String    @default("customer")
+  orders    Order[]
+  reviews   Review[]
+  createdAt DateTime  @default(now())
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  image    String?
+  products Product[]
+}
+
+model Product {
+  id           String      @id @default(cuid())
+  title        String
+  slug         String      @unique
+  description  String
+  price        Float
+  comparePrice Float?
+  currency     String      @default("USD")
+  stock        Int         @default(0)
+  sku          String      @unique
+  images       String
+  categoryId   String
+  category     Category    @relation(fields: [categoryId], references: [id])
+  featured     Boolean     @default(false)
+  published    Boolean     @default(false)
+  material     String?
+  gemstone     String?
+  weight       Float?
+  specs        String?
+  orderItems   OrderItem[]
+  reviews      Review[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  status          String      @default("pending")
+  total           Float
+  currency        String
+  shippingInfo    String
+  stripeSessionId String?
+  createdAt       DateTime    @default(now())
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+}
+
+model Article {
+  id         String   @id @default(cuid())
+  title      String
+  slug       String   @unique
+  content    String
+  excerpt    String
+  coverImage String?
+  published  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model StoreSettings {
+  id           String   @id @default("default")
+  storeName    String   @default("LuxGems & Tech")
+  description  String?
+  logo         String?
+  favicon      String?
+  primaryColor String   @default("#1a1a2e")
+  currencies   String   @default("[\"USD\",\"EUR\",\"CNY\",\"JPY\"]")
+  shippingZones String?
+}
